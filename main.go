@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ebs"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
@@ -65,10 +66,26 @@ func main() {
 			Tags:                     defaultTags,
 		})
 
+		// Create a new EBS volume
+		addVolume, err := ebs.NewVolume(ctx, "my-volume", &ebs.VolumeArgs{
+			Size:             pulumi.Int(ebsVolumeSize),
+			AvailabilityZone: pulumi.String(my_subnet.AvailabilityZone),
+			Tags:             defaultTags,
+		})
+
+		// Mount EBS volume to EC2 instance
+
+		_, err = ec2.NewVolumeAttachment(ctx, "my-ebs-volume-attachment", &ec2.VolumeAttachmentArgs{
+			DeviceName:  pulumi.String("/dev/sdh"),
+			InstanceId:  instance.ID(),
+			VolumeId:    addVolume.ID(),
+			SkipDestroy: pulumi.Bool(false),
+			ForceDetach: pulumi.Bool(true),
+		})
+
 		if err != nil {
 			return err
 		}
-
 		// Upload a Python program to the EC2 instance
 		publicIP := instance.PublicIp
 		privateIP := instance.PrivateIp
