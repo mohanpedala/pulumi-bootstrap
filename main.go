@@ -10,6 +10,9 @@ func main() {
 		// Configurable variables
 		instanceType := "t2.micro" // Instance type
 		ebsVolumeSize := 20        // EBS volume size in GB
+		defaultTags := pulumi.StringMap{
+			"Name": pulumi.String("pulumibootstrap"),
+		}
 
 		// VPC lookup
 		my_vpc, err := ec2.LookupVpc(ctx, &ec2.LookupVpcArgs{
@@ -59,9 +62,7 @@ func main() {
 				VolumeSize: pulumi.Int(ebsVolumeSize),
 			},
 			AssociatePublicIpAddress: pulumi.Bool(false),
-			Tags: pulumi.StringMap{
-				"Name": pulumi.String("Pulumibootstrap"), // Add tags to the EC2 instance
-			},
+			Tags:                     defaultTags,
 		})
 
 		if err != nil {

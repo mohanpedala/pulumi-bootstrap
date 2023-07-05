@@ -2,6 +2,9 @@
 
 preview:
 	pulumi preview
-	
-create:
+
+run:
 	pulumi up -y
+
+watch:
+	pulumi watch
