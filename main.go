@@ -52,7 +52,7 @@ func main() {
 				ec2.GetAmiFilter{
 					Name: "name",
 					Values: []string{
-						"amzn-ami-hvm-*-x86_64-ebs",
+						"al2023-ami-2023.1.20230629.0-*",
 					},
 				},
 				ec2.GetAmiFilter{
@@ -112,6 +112,17 @@ func main() {
 		if err != nil {
 			return err
 		}
+
+		// Attach policy to the role
+		_, err = iam.NewRolePolicyAttachment(ctx, "ec2-instance-policy-attachment", &iam.RolePolicyAttachmentArgs{
+			Role:      ec2Role.Name,
+			PolicyArn: pulumi.String("arn:aws:iam::aws:policy/AmazonSSMFullAccess"),
+		})
+		if err != nil {
+			return err
+		}
+
+		// Create an instance profile for the EC2 instance
 		ec2roleInstanceProfile, err := iam.NewInstanceProfile(ctx, "ec2roleInstanceProfile", &iam.InstanceProfileArgs{
 			Name: pulumi.String("ec2roleInstanceProfile"),
 			Role: ec2Role.Name,
@@ -164,11 +175,11 @@ func main() {
 		// Mount EBS volume to EC2 instance
 
 		_, err = ec2.NewVolumeAttachment(ctx, "my-ebs-volume-attachment", &ec2.VolumeAttachmentArgs{
-			DeviceName:  pulumi.String("/dev/sdh"),
-			InstanceId:  instance.ID(),
-			VolumeId:    addVolume.ID(),
-			SkipDestroy: pulumi.Bool(false),
-			ForceDetach: pulumi.Bool(true),
+			DeviceName:                  pulumi.String("/dev/sdh"),
+			InstanceId:                  instance.ID(),
+			VolumeId:                    addVolume.ID(),
+			SkipDestroy:                 pulumi.Bool(false),
+			StopInstanceBeforeDetaching: pulumi.Bool(true),
 		})
 		if err != nil {
 			return err
